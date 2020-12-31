@@ -1,32 +1,10 @@
 
 import { useState, useReducer, useEffect } from 'react';
-import { Map, Marker, InfoWindow, GoogleApiWrapper, Polygon } from 'google-maps-react';
+import { Map, Marker, Polyline, GoogleApiWrapper, Polygon } from 'google-maps-react';
 import $ from 'jquery';
 import {GOOGLE_MAPS_API_KEY} from './key';
 
 var madaraka = [
-
-  { lat: -1.3065763319021457, lng: 36.81770935186767 },
-  { lat: -1.306334597529106, lng: 36.81913194768522 },
-  { lat: -1.3067793301502337, lng: 36.81935291386413 },
-  { lat: -1.307454274309347, lng: 36.81923694674683 },
-  { lat: -1.3090945616935266, lng: 36.81845579179382 },
-  { lat: -1.3110780809015639, lng: 36.81685924530029 },
-  { lat: -1.3121562455690325, lng: 36.81592264183427 },
-  { lat: -1.3125908486061297, lng: 36.814771461647055 },
-  { lat: -1.3136531227535961, lng: 36.81223306687927 },
-  { lat: -1.3105776348589673, lng: 36.811047017974865 },
-  { lat: -1.3097117069889457, lng: 36.81037595320127 },
-  { lat: -1.3084303440142222, lng: 36.809527350112916 },
-  { lat: -1.3068812275821378, lng: 36.8122879753189 },
-  { lat: -1.3061924773946432, lng: 36.81360391490553 },
-  { lat: -1.3054179186079078, lng: 36.81522026190185 },
-  { lat: -1.3052141236212922, lng: 36.81603565344238 },
-  { lat: -1.3054393707107985, lng: 36.81693687567138 },
-];
-
-
-madaraka = [
 
   { lat: -1.3108257554920004, lng: 36.808661626017184 },
   { lat: -1.312830413899208, lng: 36.80865149910935 },
@@ -114,28 +92,78 @@ const onMarkerClick = (props, marker) => {
 
 }
 
-function _mapLoaded(mapProps, map) {
-  map.setOptions({
-    styles: mapStyle
-  })
-}
+
 
 
 function MapContainer(props) {
 
-  const dropPin = (pin) => {
-    //console.log(pin);
-    return {
-      type: 'LOAD_PIN',
-      pin: pin,
-    };
+    const [path, setPath] = useState([]);
+
+
+    const [pin, setPin] = useState([{
+        lat: -1.3097762253207629,
+        lng: 36.81468703330993
+    }]);
+
+
+
+
+
+
+
+  function _mapLoaded(mapProps, map) {
+    map.setOptions({
+      styles: mapStyle
+    });
+    renderPolygon(map);
+
   }
 
-  const [pin, setPin] = useState({
-    lat: -1.3087762253207629,
-    lng: 36.81468703330993
-  });
+  const onMapClicked=(mapProps, map, clickEvent)=>{
+      var points = path;
 
+      var latLng = clickEvent.latLng;
+      const lat = latLng.lat();
+      const lng = latLng.lng();
+      var newPoint = { lat, lng }
+      //console.log(newPoint);
+      points.push(newPoint);
+      setPath(points);
+      setPin(newPoint);
+
+      renderPolygon(map);
+      //renderPolyline(map);
+
+  }
+
+
+  
+  const renderPolygon = (map) => {
+    const polygon = new props.google.maps.Polygon({
+        paths: path,
+        strokeColor: "#FF0000",
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: "#FF0000",
+        fillOpacity: 0.35,
+        draggable: true,
+  geodesic: true
+      });
+      polygon.setMap(map);
+    
+  }
+
+  const renderPolyline = (map)=>{
+    const polyline = new props.google.maps.Polyline({
+        path: path,
+        geodesic: true,
+        strokeColor: "#FF0000",
+        strokeOpacity: 1.0,
+        strokeWeight: 2,
+      });
+      polyline.setMap(map);
+
+  }
 
   return <div style={props.style}>
     <Map google={props.google}
@@ -151,8 +179,57 @@ function MapContainer(props) {
        width: '100%',
       height: '100%',
       }}
-      onReady={(mapProps, map) => _mapLoaded(mapProps, map)}>
+      onReady={(mapProps, map) => _mapLoaded(mapProps, map)}
       
+      onClick={onMapClicked}
+      >
+
+          {console.log(path)}
+        
+      
+      {renderPolygon()}
+{renderPolyline()}
+
+
+
+       </Map>
+
+
+
+
+  </div>
+
+}
+
+
+
+export default GoogleApiWrapper(
+  (props) => ({
+    apiKey: (GOOGLE_MAPS_API_KEY),
+    LoadingContainer: LoadingContainer
+  }
+  ))(MapContainer);
+
+
+  /*
+  
+  <Map google={props.google}
+      initialCenter={{
+        lat: -1.3097762253207629,
+        lng: 36.81468703330993
+      }}
+      zoom={16}
+      disableDefaultUI
+
+      className='map'
+      style={{
+       width: '100%',
+      height: '100%',
+      }}
+      onReady={(mapProps, map) => _mapLoaded(mapProps, map)}>
+  
+      
+  onClick={onMapClicked}
 
       <Polygon
         fillColor="#000000"
@@ -186,16 +263,4 @@ function MapContainer(props) {
         fillOpacity={0.1}
       />
     </Map>
-
-  </div>
-
-}
-
-
-
-export default GoogleApiWrapper(
-  (props) => ({
-    apiKey: (GOOGLE_MAPS_API_KEY),
-    LoadingContainer: LoadingContainer
-  }
-  ))(MapContainer);
+  */
