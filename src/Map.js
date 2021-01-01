@@ -67,7 +67,7 @@ const mapStyle = [
     featureType: "poi",
     elementType: "labels",
     stylers: [
-      { "visibility": "on" }
+      { "visibility": "off" }
     ]
   }, {
     featureType: "transit",
@@ -94,10 +94,13 @@ const onMarkerClick = (props, marker) => {
 
 
 
-
 function MapContainer(props) {
 
     const [path, setPath] = useState([]);
+
+    const [polygon, setPolygon] = useState(null);
+    const [polyline, setPolyline] = useState(null);
+    
 
 
     const [pin, setPin] = useState([{
@@ -105,19 +108,46 @@ function MapContainer(props) {
         lng: 36.81468703330993
     }]);
 
+    function _mapLoaded(mapProps, map) {
+        map.setOptions({
+          styles: mapStyle
+        });
+
+        //var polygon = mapProps.google.maps;
+        var polygon =   new mapProps.google.maps.Polygon({
+            paths: path,
+            strokeColor: "#FF0000",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: "#FF0000",
+            fillOpacity: 0.35,
+            draggable: true,
+            geodesic: true
+          });
+        //console.log(polygon);
+        setPolygon(polygon);
+    
+
+        const polyline = new mapProps.google.maps.Polyline({
+            path: path,
+            geodesic: true,
+            strokeColor: "#FF0000",
+            strokeOpacity: 1.0,
+            strokeWeight: 2,
+          });
+
+
+          setPolyline(polyline);
+
+
+      }
+    
 
 
 
 
 
 
-  function _mapLoaded(mapProps, map) {
-    map.setOptions({
-      styles: mapStyle
-    });
-    renderPolygon(map);
-
-  }
 
   const onMapClicked=(mapProps, map, clickEvent)=>{
       var points = path;
@@ -130,15 +160,23 @@ function MapContainer(props) {
       points.push(newPoint);
       setPath(points);
       setPin(newPoint);
+      console.log(path);
 
+
+      
+      mapProps.google.maps.event.addDomListener(window, 'load', _mapLoaded);
       renderPolygon(map);
-      //renderPolyline(map);
+     // renderPolyline(map);
 
   }
 
 
   
   const renderPolygon = (map) => {
+    //  console.log(map);
+
+  
+    //Set the polygon to editable else the map will draw a new polygon
     const polygon = new props.google.maps.Polygon({
         paths: path,
         strokeColor: "#FF0000",
@@ -146,14 +184,55 @@ function MapContainer(props) {
         strokeWeight: 2,
         fillColor: "#FF0000",
         fillOpacity: 0.35,
-        draggable: true,
-  geodesic: true
+        //draggable: true,
+        //geodesic: true,
+        editable:true,
+        zIndex:5,
       });
+
+
+      polygon.addListener("click", (event)=>{
+        console.log(polygon);
+        const vertices = polygon.getPath();
+        var points = [];
+
+        // Iterate over the vertices.
+        for (let i = 0; i < vertices.getLength(); i++) {
+          const xy = vertices.getAt(i);
+
+          var coord = {
+            lat:xy.lat(),
+            lng:xy.lng()
+        }
+          points.push(coord);
+          
+        }
+        console.log(points);
+
+
+      });
+
+
+
+
       polygon.setMap(map);
+  
     
   }
 
+  const dy =()=>{
+       return <Polygon
+        paths={[path]}
+        strokeColor="#FFC107"
+        strokeOpacity={1}
+        strokeWeight={1}
+        fillColor="#CCCCCC"
+        fillOpacity={0.5}
+      />
+  }
+
   const renderPolyline = (map)=>{
+   // console.log(map);
     const polyline = new props.google.maps.Polyline({
         path: path,
         geodesic: true,
@@ -162,6 +241,7 @@ function MapContainer(props) {
         strokeWeight: 2,
       });
       polyline.setMap(map);
+      console.log(polyline);
 
   }
 
@@ -184,12 +264,17 @@ function MapContainer(props) {
       onClick={onMapClicked}
       >
 
-          {console.log(path)}
-        
-      
-      {renderPolygon()}
-{renderPolyline()}
+          
+<Polygon
+        paths={[madaraka]}
+        strokeColor="#FFC107"
+        strokeOpacity={1}
+        strokeWeight={1}
+        fillColor="#CCCCCC"
+        fillOpacity={0.5}
+      />
 
+      {dy()}
 
 
        </Map>
@@ -226,10 +311,13 @@ export default GoogleApiWrapper(
        width: '100%',
       height: '100%',
       }}
-      onReady={(mapProps, map) => _mapLoaded(mapProps, map)}>
+      onReady={(mapProps, map) => _mapLoaded(mapProps, map)}
+      
+    onClick={onMapClicked}
+      >
   
       
-  onClick={onMapClicked}
+
 
       <Polygon
         fillColor="#000000"
