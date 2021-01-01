@@ -163,10 +163,8 @@ function MapContainer(props) {
       console.log(path);
 
 
-      
-      mapProps.google.maps.event.addDomListener(window, 'load', _mapLoaded);
-      renderPolygon(map);
-     // renderPolyline(map);
+      //renderPolygon(map);
+      renderPolyline(map);
 
   }
 
@@ -220,25 +218,16 @@ function MapContainer(props) {
     
   }
 
-  const dy =()=>{
-       return <Polygon
-        paths={[path]}
-        strokeColor="#FFC107"
-        strokeOpacity={1}
-        strokeWeight={1}
-        fillColor="#CCCCCC"
-        fillOpacity={0.5}
-      />
-  }
 
   const renderPolyline = (map)=>{
    // console.log(map);
     const polyline = new props.google.maps.Polyline({
         path: path,
-        geodesic: true,
+        geodesic: false,
         strokeColor: "#FF0000",
         strokeOpacity: 1.0,
         strokeWeight: 2,
+        editable:true,
       });
       polyline.setMap(map);
       console.log(polyline);
@@ -262,22 +251,7 @@ function MapContainer(props) {
       onReady={(mapProps, map) => _mapLoaded(mapProps, map)}
       
       onClick={onMapClicked}
-      >
-
-          
-<Polygon
-        paths={[madaraka]}
-        strokeColor="#FFC107"
-        strokeOpacity={1}
-        strokeWeight={1}
-        fillColor="#CCCCCC"
-        fillOpacity={0.5}
       />
-
-      {dy()}
-
-
-       </Map>
 
 
 
@@ -295,60 +269,3 @@ export default GoogleApiWrapper(
   }
   ))(MapContainer);
 
-
-  /*
-  
-  <Map google={props.google}
-      initialCenter={{
-        lat: -1.3097762253207629,
-        lng: 36.81468703330993
-      }}
-      zoom={16}
-      disableDefaultUI
-
-      className='map'
-      style={{
-       width: '100%',
-      height: '100%',
-      }}
-      onReady={(mapProps, map) => _mapLoaded(mapProps, map)}
-      
-    onClick={onMapClicked}
-      >
-  
-      
-
-
-      <Polygon
-        fillColor="#000000"
-        fillOpacity={0.1}
-        paths={[madaraka]}
-        //Boundary color
-        strokeColor="#0000FF"
-        strokeOpacity={1}
-        strokeWeight={2}
-        onClick={(t, map, coord) => {
-
-          const { latLng } = coord;
-          const lat = latLng.lat();
-          const lng = latLng.lng();
-          var pin = {
-            Lat: lat,
-            Lng: lng
-
-          }
-
-          //setPin()
-
-        }}
-      />
-      <Polygon
-        paths={[everythingElse, madaraka]}
-        strokeColor="#FFC107"
-        strokeOpacity={0.8}
-        strokeWeight={0.1}
-        fillColor="#CCCCCC"
-        fillOpacity={0.1}
-      />
-    </Map>
-  */

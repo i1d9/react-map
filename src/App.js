@@ -18,16 +18,27 @@ const App = () => {
 
         <div className="myMap">
           <Map style={mapStyle} />
-          
+
         </div>
 
         <div className="controls">
           <form>
-            <input placeholder="Your API Key" />
-            <input type="radio" id="male" name="gender" value="male"/>
-<label for="male">Male</label><br/>
-<input type="radio" id="female" name="gender" value="female"/>
-<label for="female">Female</label><br/>
+            <input placeholder="Your Google Maps API Key" />
+            <div>
+
+              <input type="radio" id="Route" name="controls" value="male" />
+              <label for="Route">Find Route</label><br />
+
+              <input type="radio" id="Polygon" name="controls" value="male" />
+              <label for="Polygon">Draw Polygon</label><br />
+              <input type="radio" id="Polyline" name="controls" value="female" />
+              <label for="Polyline">Draw Polyline</label><br />
+
+              <input type="radio" id="Route" name="controls" value="male" />
+              <label for="Route">Find Route</label><br />
+
+            </div>
+
           </form>
         </div>
       </div>
