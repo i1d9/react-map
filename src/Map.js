@@ -1,94 +1,22 @@
 
 import { useState, useReducer, useEffect } from 'react';
 import { Map, Marker, Polyline, GoogleApiWrapper, Polygon } from 'google-maps-react';
-import $ from 'jquery';
-import {GOOGLE_MAPS_API_KEY} from './key';
+import $, { event } from 'jquery';
 
-var madaraka = [
+import { usePersistedReducer, mapReducer, initialState, loadDestination, loadOrigin, loadPoints, loadKey } from "./reducer";
 
-  { lat: -1.3108257554920004, lng: 36.808661626017184 },
-  { lat: -1.312830413899208, lng: 36.80865149910935 },
-  { lat: -1.3134144278614805, lng: 36.80951547137628 },
-  { lat: -1.313741017319574, lng: 36.810400901315326 },
-  { lat: -1.313741017319574, lng: 36.810400901315326 },
-  { lat: -1.3140708422858967, lng: 36.81108218240511 },
-  { lat: -1.315093835705163, lng: 36.811058042523975 },
-  { lat: -1.315093835705163, lng: 36.811058042523975 },
-  { lat: -1.316189899617654, lng: 36.81245681452524 },
-  { lat: -1.315692145882217, lng: 36.81297381031286 },
-  { lat: -1.3151729400281267, lng: 36.81329768705141 },
-  { lat: -1.315301938160239, lng: 36.814162010096226 },
-  { lat: -1.314615759497946, lng: 36.814640095042854 },
-  { lat: -1.3139727707259168, lng: 36.81490961942835 },
-  { lat: -1.313072929389837, lng: 36.815491583543526 },
-  { lat: -1.3129465053140499, lng: 36.81622635833154 },
-  { lat: -1.3136341145297643, lng: 36.817725637929854 },
-  { lat: -1.3128409612332947, lng: 36.81837871820443 },
-  { lat: -1.3113717821170303, lng: 36.818276104899375 },
-  { lat: -1.3102161240498096, lng: 36.819698844441156 },
-  { lat: -1.3084169032109834, lng: 36.81957663159036 },
-  { lat: -1.3069851196480087, lng: 36.82012613975713 },
-  { lat: -1.3063105228137488, lng: 36.81902904102898 },
-  { lat: -1.3058016075368912, lng: 36.817536354091686 },
-  { lat: -1.3051639795293342, lng: 36.81612949784287 },
-  { lat: -1.3054692786555377, lng: 36.814992090738485 },
-  { lat: -1.3060080659974753, lng: 36.814037149088136 },
-  { lat: -1.3064490763844678, lng: 36.81321635550907 },
-  { lat: -1.3069055545531518, lng: 36.81239826294925 },
-  { lat: -1.307598005577994, lng: 36.81102227091438 },
-  { lat: -1.3092683919278465, lng: 36.809803577934886 },
-];
-
-/*
-
-
-#Polygon_0
-
-
-*/
-
-
-var everythingElse = [
-
-  { lat: 0, lng: 180 },
-  { lat: 180, lng: 0 },
-
-  { lat: 0, lng: -180 },
-  { lat: -180, lng: 0 },
-];
-const mapStyle = [
-  {
-    featureType: "road.arterial",
-    elementType: "geometry",
-    stylers: [
-      { "color": "#CCFFFF" }
-    ]
-  }, {
-    featureType: "poi",
-    elementType: "labels",
-    stylers: [
-      { "visibility": "off" }
-    ]
-  }, {
-    featureType: "transit",
-    elementType: "labels",
-    stylers: [
-      { "visibility": "off" }
-    ]
-  }
-]
 
 const LoadingContainer = (props) => (
-  <div>Fancy loading!</div>
+    <div>Fancy loading!</div>
 )
 
 
 const onMarkerClick = (props, marker) => {
-  this.setState({
-    activeMarker: marker,
-    selectedPlace: props,
-    showingInfoWindow: true
-  });
+    this.setState({
+        activeMarker: marker,
+        selectedPlace: props,
+        showingInfoWindow: true
+    });
 
 }
 
@@ -96,176 +24,497 @@ const onMarkerClick = (props, marker) => {
 
 function MapContainer(props) {
 
-    const [path, setPath] = useState([]);
+    const mapStyle = [
+        {
+            featureType: "road.arterial",
+            elementType: "geometry",
+            stylers: [
+                { "color": "#CCFFFF" }
+            ]
+        }, {
+            featureType: "poi",
+            elementType: "labels",
+            stylers: [
+                { "visibility": "off" }
+            ]
+        }, {
+            featureType: "transit",
+            elementType: "labels",
+            stylers: [
+                { "visibility": "off" }
+            ]
+        }
+    ];
 
-    const [polygon, setPolygon] = useState(null);
-    const [polyline, setPolyline] = useState(null);
-    
+    const [state, dispatch] = usePersistedReducer(mapReducer, initialState);
 
-
-    const [pin, setPin] = useState([{
+    const [mapCenter, setMapCenter] = useState({
         lat: -1.3097762253207629,
         lng: 36.81468703330993
-    }]);
+    });
+    const [path, setPath] = useState([]);
+    const [opacity, setOpacity] = useState(1);
+    const [stroke, setStroke] = useState(1);
+
+    const [color, setColor] = useState('');
+
+    const [message, setMessage] = useState('');
+
+    const [drawPolygon, setDrawPolygon] = useState(false);
+    const [drawPolyline, setDrawPolyline] = useState(false);
+
+    const [destination, setDestination] = useState(mapCenter);
+    const [origin, setOrigin] = useState(mapCenter);
+    const [themap, setTheMap] = useState();
+
+
+
+    
 
     function _mapLoaded(mapProps, map) {
         map.setOptions({
-          styles: mapStyle
+            styles: mapStyle
+        });
+        setTheMap(map);
+
+        //var res = decodePolyline('a~l~Fjk~uOwHJy@P');
+        //console.log(res);
+
+        //console.log(props);
+
+
+    }
+
+
+
+
+
+
+
+
+    const onMapClicked = (mapProps, map, clickEvent) => {
+        var points = path;
+
+        var latLng = clickEvent.latLng;
+        const lat = latLng.lat();
+        const lng = latLng.lng();
+        var newPoint = { lat, lng }
+        console.log(map);
+        points.push(newPoint);
+        setPath(points);
+        if (drawPolygon) {
+            renderPolygon(map);
+
+        } else if (drawPolyline) {
+            renderPolyline(map);
+        }
+
+
+    }
+
+
+
+    const renderPolygon = () => {
+        //  console.log(map);
+
+
+        //Set the polygon to editable else the map will draw a new polygon
+        const polygon = new props.google.maps.Polygon({
+            paths: path,
+            strokeColor: color,
+            strokeOpacity: opacity,
+            strokeWeight: stroke,
+            fillColor: color,
+            fillOpacity: opacity,
+            //draggable: true,
+            //geodesic: true,
+            editable: true,
+            zIndex: 5,
         });
 
-        //var polygon = mapProps.google.maps;
-        var polygon =   new mapProps.google.maps.Polygon({
-            paths: path,
-            strokeColor: "#FF0000",
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: "#FF0000",
-            fillOpacity: 0.35,
-            draggable: true,
-            geodesic: true
-          });
-        //console.log(polygon);
-        setPolygon(polygon);
-    
 
-        const polyline = new mapProps.google.maps.Polyline({
+        polygon.addListener("click", (event) => {
+            console.log(polygon);
+            const vertices = polygon.getPath();
+            var points = [];
+
+            // Iterate over the vertices.
+            for (let i = 0; i < vertices.getLength(); i++) {
+                const xy = vertices.getAt(i);
+
+                var coord = {
+                    lat: xy.lat(),
+                    lng: xy.lng()
+                }
+                points.push(coord);
+
+            }
+            console.log(points);
+            setPath(points);
+
+        });
+
+
+
+
+        polygon.setMap(themap);
+
+
+    }
+
+
+    const renderPolyline = () => {
+        const polyline = new props.google.maps.Polyline({
             path: path,
-            geodesic: true,
-            strokeColor: "#FF0000",
-            strokeOpacity: 1.0,
-            strokeWeight: 2,
-          });
-
-
-          setPolyline(polyline);
-
-
-      }
+            geodesic: false,
+            strokeColor: color,
+            strokeOpacity: opacity,
+            strokeWeight: stroke,
+            fillColor: color,
+            fillOpacity: opacity,
+            editable: true,
+        });
     
+        polyline.setMap(themap);
+        //console.log(polyline);
+
+    }
 
 
-
-
-
-
-
-  const onMapClicked=(mapProps, map, clickEvent)=>{
-      var points = path;
-
-      var latLng = clickEvent.latLng;
-      const lat = latLng.lat();
-      const lng = latLng.lng();
-      var newPoint = { lat, lng }
-      //console.log(newPoint);
-      points.push(newPoint);
-      setPath(points);
-      setPin(newPoint);
-      console.log(path);
-
-
-      //renderPolygon(map);
-      renderPolyline(map);
-
-  }
-
-
-  
-  const renderPolygon = (map) => {
-    //  console.log(map);
-
-  
-    //Set the polygon to editable else the map will draw a new polygon
-    const polygon = new props.google.maps.Polygon({
-        paths: path,
-        strokeColor: "#FF0000",
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        fillColor: "#FF0000",
-        fillOpacity: 0.35,
-        //draggable: true,
-        //geodesic: true,
-        editable:true,
-        zIndex:5,
-      });
-
-
-      polygon.addListener("click", (event)=>{
-        console.log(polygon);
-        const vertices = polygon.getPath();
-        var points = [];
-
-        // Iterate over the vertices.
-        for (let i = 0; i < vertices.getLength(); i++) {
-          const xy = vertices.getAt(i);
-
-          var coord = {
-            lat:xy.lat(),
-            lng:xy.lng()
+    function decodePolyline(encoded) {
+        if (!encoded) {
+            return [];
         }
-          points.push(coord);
-          
+        var poly = [];
+        var index = 0, len = encoded.length;
+        var lat = 0, lng = 0;
+
+        while (index < len) {
+            var b, shift = 0, result = 0;
+
+            do {
+                b = encoded.charCodeAt(index++) - 63;
+                result = result | ((b & 0x1f) << shift);
+                shift += 5;
+            } while (b >= 0x20);
+
+            var dlat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+            lat += dlat;
+
+            shift = 0;
+            result = 0;
+
+            do {
+                b = encoded.charCodeAt(index++) - 63;
+                result = result | ((b & 0x1f) << shift);
+                shift += 5;
+            } while (b >= 0x20);
+
+            var dlng = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+            lng += dlng;
+
+            var p = {
+                lat: lat / 1e5,
+                lng: lng / 1e5,
+            };
+            poly.push(p);
         }
-        console.log(points);
+        return poly;
+    }
+
+    const getRoute = () => {
+        // console.log(map);
+        console.log(props.google.maps.DirectionsService)
+
+        var destinationN = `${destination.lat},${destination.lng}`;
+
+        var originN = `${origin.lat},${origin.lng}`;
+
+        const DirectionsService = new props.google.maps.DirectionsService();
+
+        DirectionsService.route(
+            {//-1.307094715669858,36.81960084022521
+                origin: new props.google.maps.LatLng(origin.lat, origin.lng),
+                destination: new props.google.maps.LatLng(destination.lat, destination.lng),
+                travelMode: props.google.maps.TravelMode.DRIVING
+            },
+            (result, status) => {
+                if (status === props.google.maps.DirectionsStatus.OK) {
+                    //console.log(result);
+                    var startpoint = result.routes[0].legs[0].start_address;
+                    var endpoint = result.routes[0].legs[0].end_address;
+                    var duration = result.routes[0].legs[0].duration.text;
+                    var distance = result.routes[0].legs[0].distance.text;
+                    //console.log(result.routes[0].legs[0]); 
+                   // var coord = decodePolyline(result.routes[0].overview_polyline);
+                    var pathPoints = [];
+                    result.routes[0].overview_path.map((path) => {
+
+                        const lat = path.lat();
+                        const lng = path.lng();
+                        var pin = {
+                            lat,
+                            lng
+                        }
+                        pathPoints.push(pin);
+                    });
+                    setPath(pathPoints);
+                    //console.log(pathPoints)
+
+                    const polyline = new props.google.maps.Polyline({
+                        path: pathPoints,
+                        geodesic: false,
+                        strokeColor: color,
+                        strokeOpacity: 1.0,
+                        strokeWeight: 2,
+                        editable: true,
+                    });
+
+                    setMessage(`It will take ${duration} to drive from ${startpoint} to ${endpoint}, The total distance is ${distance}.`);
+                    setTimeout(()=>{
+                        setMessage('');                       
+                    },180000);
+
+                    polyline.setMap(themap);
+
+                    // console.log(coord);
+                } else {
+
+                    setMessage(`Could not fetch route`);
+                    setTimeout(()=>{
+                        setMessage('');                       
+                    },18000);
+                    console.error(`error fetching directions ${result}`);
+                }
+            }
+        );
+    }
+
+    return <div style={props.style}>
+        <Map google={props.google}
+            initialCenter={mapCenter}
+            zoom={16}
+            disableDefaultUI
+
+            className='map'
+            style={{
+                width: '100%',
+                height: '100%',
+            }}
+            onReady={(mapProps, map) => _mapLoaded(mapProps, map)}
+
+            onClick={onMapClicked}
+        >
 
 
-      });
+            <Marker
+                title={'Destination'}
+                position={destination}
+
+                draggable
+
+                onDragend={(event) => {
+                    console.log(event);
+                }}
+
+                onClick={(t, map, coord) => {
+
+                    const { latLng } = coord;
+                    const lat = latLng.lat();
+                    const lng = latLng.lng();
+                    var pin = {
+                        lat,
+                        lng
+                    }
+                    setDestination(pin);
+
+                    setMessage('End point has been saved successfully');
+                   
+                    console.log(pin);
+
+
+                }}
+            />
+
+
+            <Marker
+                title={'Origin'}
+                draggable
+                onDragend={(event) => {
+
+                }}
+
+                position={origin}
+
+                onClick={(t, map, coord) => {
+
+                    const { latLng } = coord;
+                    const lat = latLng.lat();
+                    const lng = latLng.lng();
+                    var pin = {
+                        lat,
+                        lng
+                    }
+
+                    setOrigin(pin);
+                    setMessage('Start point has been saved successfully');
+                    
+
+
+                    console.log(pin);
+
+
+                }}
+
+            />
+        </Map>
+
+        <div className='messageModal'>
+            {message}
+        </div>
+
+        <div className='coordinates'>
+            <span className='title'>
+                Coordinates
+            </span>
+            <div className='content'>
+            {
+    path.map((coord,index)=>{
+        return <span>{`{latitude:${coord.lat},longitude:${coord.lat}}`}</span>
+    })
+}
+            </div>
+            <span className='controls' onClick={()=>{
+                $('.coordinates').fadeOut();
+                
+            }}> 
+       
+Done
+            </span>
+        
+
+        </div>
+
+        <div className="controls">
+            <input placeholder="Colour" type="color" onChange={(event) => {
+                console.log(event.target.value);
+                setColor(event.target.value);
+            }} />
 
 
 
-
-      polygon.setMap(map);
-  
-    
-  }
-
-
-  const renderPolyline = (map)=>{
-   // console.log(map);
-    const polyline = new props.google.maps.Polyline({
-        path: path,
-        geodesic: false,
-        strokeColor: "#FF0000",
-        strokeOpacity: 1.0,
-        strokeWeight: 2,
-        editable:true,
-      });
-      polyline.setMap(map);
-      console.log(polyline);
-
-  }
-
-  return <div style={props.style}>
-    <Map google={props.google}
-      initialCenter={{
-        lat: -1.3097762253207629,
-        lng: 36.81468703330993
-      }}
-      zoom={16}
-      disableDefaultUI
-
-      className='map'
-      style={{
-       width: '100%',
-      height: '100%',
-      }}
-      onReady={(mapProps, map) => _mapLoaded(mapProps, map)}
-      
-      onClick={onMapClicked}
-      />
+            <div>
+                <label for="opacity">Opacity:</label>
+                <input type="range" id="opacity" name="vol" min="10" max="100" onChange={(event) => {
+                    var stroke = (event.target.value) / 100;
+                    console.log(stroke);
+                    setOpacity(stroke);
+                }} />
+            </div>
+            <div>
+                <label for="stroke">Stroke :</label>
+                <input type="range" id="stroke" name="vol" min="10" max="1000" onChange={(event) => {
+                    var stroke = (event.target.value) / 100;
+                    console.log(stroke);
+                    setStroke(stroke);
+                }} />
+            </div>
 
 
 
+            <span onClick={() => {
+                if (path.length>0) {
+                    $('.coordinates').css({
+                        display:'flex'
+                    });
+                    
+                }else{
+                    setMessage('You may draw a polygon/polyine or set a starting point and ending point to find the pathway.');
+                    setTimeout(()=>{
+                        setMessage('');
+                    },10000);
+                }
 
-  </div>
+            }}>
+                Show Coordinates
+            </span>
+
+
+
+            <span onClick={() => {
+                if (origin == mapCenter) {
+                    console.log('Origin has not been set');
+                    setMessage('Drag the marker to the startpoint then click it to save');
+                    setTimeout(()=>{
+                        setMessage('');
+                       
+                    },10000);
+                    return
+                } else if (destination == mapCenter) {
+                    console.log('Destination has not been set')
+                    setMessage('Drag the marker to the endpoint then click it to save');
+                    setTimeout(()=>{
+                        setMessage('');                       
+                    },10000);
+                    return
+                } else {
+                    getRoute();
+                }
+            }}>
+                Find Route
+            </span>
+            <span onClick={() => {
+                setPath([]);
+                setDrawPolygon(!drawPolyline);
+                setMessage('Press two different Points on the map then adjust')
+                setTimeout(()=>{
+                    setMessage('');
+                   
+                },10000);
+           
+           }}>
+                Draw Polygon
+            </span>
+
+            <span onClick={() => {
+                setPath([]);
+                setMessage('Press two different Points on the map then adjust');
+                setDrawPolyline(!drawPolyline);
+
+                setTimeout(()=>{
+                    setMessage('');
+                   
+                },10000);
+
+                if(!drawPolyline){
+
+                }
+            }}>
+                Draw Polyline
+            </span>
+
+            <span onClick={() => {
+        
+            window.location.reload();
+            }}>
+                Refresh Map
+            </span>
+
+
+
+        </div>
+
+    </div>
 
 }
 
 
 
 export default GoogleApiWrapper(
-  (props) => ({
-    apiKey: (GOOGLE_MAPS_API_KEY),
-    LoadingContainer: LoadingContainer
-  }
-  ))(MapContainer);
+    (props) => ({
+
+        apiKey: (props.apiKey),
+        LoadingContainer: LoadingContainer
+    }
+    ))(MapContainer);
 
