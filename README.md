@@ -8,7 +8,7 @@ After cloning, you can run the following in the project directory:
 
 ### `yarn install`
 
-Install all the dependecies need to run this project
+Installs all the dependencies needed to run this project
 
 ### `yarn start`
 
