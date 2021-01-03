@@ -2,6 +2,8 @@
 
 https://0yah.github.io/react-map
 
+![Map Display](https://github.com/0yah/react-map/blob/master/src/screenshots/1.png?raw=true)
+
 ## Available Scripts
 
 After cloning, you can run the following in the project directory:
@@ -29,4 +31,17 @@ Builds the app for production to the `build` folder.\
 It correctly bundles React in production mode and optimizes the build for the best performance.
 
 The build is minified and the filenames include the hashes.\
+
+# Features
+1. Draw Polygon
+![Draw Polygon](https://github.com/0yah/react-map/blob/master/src/screenshots/2.png?raw=true)
+
+1. Draw Polyline
+![Draw Polyline](https://github.com/0yah/react-map/blob/master/src/screenshots/5.png?raw=true)
+
+1. Find Route between two coordinates
+![Route between two coordinates](https://github.com/0yah/react-map/blob/master/src/screenshots/3.png?raw=true)
+
+1. Get Pathway between two coordinates
+![Coordinate between two coordinates](https://github.com/0yah/react-map/blob/master/src/screenshots/4.png?raw=true)
 
