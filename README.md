@@ -1,8 +1,12 @@
-# Demo
+# Google Maps with React
 
-https://0yah.github.io/react-map
+live demo: https://0yah.github.io/react-map
 
 ![Map Display](https://github.com/0yah/react-map/blob/master/src/screenshots/1.png?raw=true)
+
+## Libraries
+1. [Persisted Reducer](https://www.npmjs.com/package/use-persisted-reducer) 
+1. [Google Maps React Wrapper](https://www.npmjs.com/package/google-maps-react) 
 
 ## Available Scripts
 
